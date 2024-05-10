@@ -70,6 +70,7 @@ c.execute("INSERT OR IGNORE INTO LOGIN VALUES ('admin', 'admin')")
 def goto_login():
     main_frame.grid_forget()
     login_frame.grid(row=0, column=0, padx=10, pady=10)
+    signup_frame.grid(row=0, column=1, padx=10, pady=10)
 
 # Function to perform login
 def login():
@@ -79,8 +80,25 @@ def login():
     if c.fetchone():
         login_frame.grid_forget()
         customer_entry_frame.grid(row=0, column=0, padx=10, pady=10)
+        signup_frame.grid_forget()
     else:
         messagebox.showerror("Login Failed", "Invalid username or password.")
+
+# Function to perform signup
+def signup():
+    username = signup_username_entry.get()
+    password = signup_password_entry.get()
+    phone = signup_phone_entry.get()
+    if username and password and phone:
+        c.execute("INSERT INTO LOGIN (UserName, Password) VALUES (?, ?)", (username, password))
+        conn.commit()
+        c.execute("INSERT INTO CUSTOMER (CNAME, PHONE_NUMBER) VALUES (?, ?)", ("", phone))
+        conn.commit()
+        messagebox.showinfo("Success", "Signup successful. You can now login.")
+        # After signup, go to the login page
+        goto_login()
+    else:
+        messagebox.showerror("Error", "Please enter username, password, and phone number.")
 
 # Function to display products
 def display_products():
@@ -88,10 +106,11 @@ def display_products():
     c.execute("SELECT * FROM PRODUCT")
     for row in c.fetchall():
         ttk.Label(products_frame, text=row[1]).pack()
-        ttk.Button(products_frame, text="Add to Cart", command=add_to_cart).pack()
+        ttk.Button(products_frame, text="Add to Cart", command=lambda pid=row[0]: add_to_cart(pid)).pack()
 
 # Function to add product to cart
-def add_to_cart():
+def add_to_cart(product_id):
+    # You can add code here to handle adding product to cart and updating database
     messagebox.showinfo("Success", "Product added to cart successfully.")
 
 # Main application window
@@ -101,7 +120,7 @@ root.title("Shopping Management System")
 # Main page with image
 main_frame = ttk.Frame(root)
 main_frame.grid(row=0, column=0, padx=10, pady=10)
-image = Image.open("/Users/niveditak/Desktop/dbms/Online-Shopping-System-1024x576.jpg")
+image = Image.open("Online-Shopping-System-1024x576.jpg")  
 photo = ImageTk.PhotoImage(image)
 label = ttk.Label(main_frame, image=photo)
 label.photo = photo
@@ -121,6 +140,23 @@ password_entry = ttk.Entry(login_frame, show="*")
 password_entry.grid(row=1, column=1, padx=5, pady=5)
 login_button = ttk.Button(login_frame, text="Login", command=login)
 login_button.grid(row=2, column=0, columnspan=2, pady=10)
+
+# Signup page
+signup_frame = ttk.Frame(root)
+signup_username_label = ttk.Label(signup_frame, text="Username:")
+signup_username_label.grid(row=0, column=0, padx=5, pady=5)
+signup_username_entry = ttk.Entry(signup_frame)
+signup_username_entry.grid(row=0, column=1, padx=5, pady=5)
+signup_password_label = ttk.Label(signup_frame, text="Password:")
+signup_password_label.grid(row=1, column=0, padx=5, pady=5)
+signup_password_entry = ttk.Entry(signup_frame, show="*")
+signup_password_entry.grid(row=1, column=1, padx=5, pady=5)
+signup_phone_label = ttk.Label(signup_frame, text="Phone Number:")
+signup_phone_label.grid(row=2, column=0, padx=5, pady=5)
+signup_phone_entry = ttk.Entry(signup_frame)
+signup_phone_entry.grid(row=2, column=1, padx=5, pady=5)
+signup_button = ttk.Button(signup_frame, text="Signup", command=signup)
+signup_button.grid(row=3, column=0, columnspan=2, pady=10)
 
 # Customer entry page
 customer_entry_frame = ttk.Frame(root)
@@ -162,7 +198,7 @@ def add_customer():
 add_customer_button = ttk.Button(customer_entry_frame, text="Add Customer", command=add_customer)
 add_customer_button.grid(row=4, column=0, columnspan=2, pady=10)
 
- # Product display and cart
+# Product display and cart
 products_frame = ttk.Frame(root)
 
 def display_products():
@@ -170,11 +206,13 @@ def display_products():
     c.execute("SELECT * FROM PRODUCT")
     for row in c.fetchall():
         ttk.Label(products_frame, text=row[1]).pack()
-        ttk.Button(products_frame, text="Add to Cart", command=lambda: add_to_cart(row[0])).pack()
+        ttk.Button(products_frame, text="Add to Cart", command=lambda pid=row[0]: add_to_cart(pid)).pack()
 
 def add_to_cart(product_id):
-    # You can add code here to handle adding product to cart and updating database
+    # You can store the product IDs in a list for simplicity
+    cart.append(product_id)
     messagebox.showinfo("Success", "Product added to cart successfully.")
+
 
 display_products_button = ttk.Button(products_frame, text="Display Products", command=display_products)
 display_products_button.pack()
